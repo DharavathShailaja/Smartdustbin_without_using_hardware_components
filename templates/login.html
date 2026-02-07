@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Dustbin | Login</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Segoe UI", sans-serif;
+}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#43cea2,#185a9d);
+}
+
+.login-card{
+  background:white;
+  width:380px;
+  padding:35px;
+  border-radius:18px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.3);
+  text-align:center;
+}
+
+.icon{
+  font-size:45px;
+  margin-bottom:10px;
+}
+
+.login-card h1{
+  color:#185a9d;
+}
+
+.login-card p{
+  color:#666;
+  margin-bottom:25px;
+}
+
+.input-box{
+  margin-bottom:15px;
+}
+
+.input-box input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+
+.input-box input:focus{
+  border-color:#43cea2;
+  outline:none;
+}
+
+/* 🔴 ERROR MESSAGE */
+.error{
+  display:none;
+  color:#d32f2f;
+  font-size:14px;
+  margin-bottom:12px;
+  text-align:left;
+}
+
+.login-btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,#43cea2,#185a9d);
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.login-btn:hover{
+  transform:scale(1.03);
+}
+
+.extra{
+  margin-top:18px;
+  font-size:14px;
+}
+
+.extra a{
+  text-decoration:none;
+  color:#185a9d;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-card">
+  <div class="icon">♻️</div>
+  <h1>Smart Dustbin</h1>
+  <p>User Login</p>
+
+  <div class="input-box">
+    <input type="email" id="email" placeholder="Email">
+  </div>
+
+  <div class="input-box">
+    <input type="password" id="password" placeholder="Password">
+  </div>
+
+  <!-- ❌ ERROR MESSAGE HERE -->
+  <div class="error" id="errorMsg">
+    Invalid email or password
+  </div>
+
+  <button class="login-btn" onclick="login()">Login</button>
+
+  <div class="extra">
+    Not registered?
+    <a href="register.html">Create Account</a>
+  </div>
+</div>
+
+<script>
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errorMsg = document.getElementById("errorMsg");
+
+  // hide error first
+  errorMsg.style.display = "none";
+
+  if(!email || !password){
+    errorMsg.innerText = "Please enter email and password";
+    errorMsg.style.display = "block";
+    return;
+  }
+
+  try{
+    const res = await fetch("http://127.0.0.1:5000/api/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({email,password})
+    });
+
+    const data = await res.json();
+
+    if(res.status === 200){
+      localStorage.setItem("loggedIn","true");
+      localStorage.setItem("userEmail",email);
+      localStorage.setItem("binId", data.bin_id);
+      window.location.href = "dashboard.html";
+    }else{
+      // ❌ SHOW ERROR INSIDE CARD
+      errorMsg.innerText = data.message;
+      errorMsg.style.display = "block";
+    }
+
+  }catch(err){
+    errorMsg.innerText = "Server error. Try again later.";
+    errorMsg.style.display = "block";
+  }
+}
+</script>
+
+</body>
+</html>

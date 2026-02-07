@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Dustbin Dashboard</title>
+
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#74ebd5,#acb6e5);
+}
+h1{
+  text-align:center;
+  margin:15px;
+  color:#1a237e;
+}
+.container{
+  display:flex;
+  justify-content:space-around;
+  padding:20px;
+}
+.left{
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+.bucket-card{
+  background:#fff;
+  width:230px;
+  padding:12px;
+  border-radius:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);
+  text-align:center;
+  cursor:pointer;
+  transition:0.3s;
+}
+.bucket-card.selected{
+  border:3px solid #1e88e5;
+  box-shadow:0 8px 20px rgba(30,136,229,0.5);
+}
+.bucket{
+  display:flex;
+  height:150px;
+  border:3px solid #333;
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:6px;
+}
+.part{
+  width:50%;
+  position:relative;
+}
+.fill{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:0%;
+  transition:0.4s;
+}
+.useful{background:linear-gradient(#00c853,#b9f6ca);}
+.waste{background:linear-gradient(#d50000,#ff8a80);}
+button{
+  width:100%;
+  margin:4px 0;
+  padding:7px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  font-size:13px;
+  cursor:pointer;
+}
+.useful-btn{background:#1e88e5;}
+.waste-btn{background:#d81b60;}
+.right{
+  background:white;
+  width:340px;
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,0.3);
+  text-align:center;
+}
+#statusBtn{
+  margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:14px;
+  font-size:15px;
+  color:white;
+  background:#2e7d32;
+  cursor:default;
+}
+.refresh-useful{
+  background:#43a047;
+}
+.refresh-waste{
+  background:#8e24aa;
+}
+</style>
+</head>
+
+<body>
+
+<h1>♻ Smart Dustbin Dashboard</h1>
+
+<div class="container">
+<div class="left" id="leftSide">
+<script>
+for(let i=1;i<=3;i++){
+  document.write(`
+    <div class="bucket-card" id="bucketCard${i}" onclick="selectBin(${i})">
+      <b>Bucket ${i}</b>
+      <div class="bucket">
+        <div class="part"><div id="u${i}" class="fill useful"></div></div>
+        <div class="part"><div id="w${i}" class="fill waste"></div></div>
+      </div>
+      <button class="useful-btn" onclick="event.stopPropagation();addUseful(${i})">
+        Add Useful
+      </button>
+      <button class="waste-btn" onclick="event.stopPropagation();addWaste(${i})">
+        Add Unuseful
+      </button>
+    </div>
+  `);
+}
+</script>
+</div>
+
+<div class="right">
+  <h3 id="activeTitle">Selected: Bucket 1</h3>
+
+  <div class="bucket">
+    <div class="part"><div id="ru" class="fill useful"></div></div>
+    <div class="part"><div id="rw" class="fill waste"></div></div>
+  </div>
+
+  <p id="levelText">Useful: 0% | Unuseful: 0%</p>
+
+  <button id="statusBtn">Status: NOT FULL</button>
+  <button class="refresh-useful" onclick="refreshUseful()">Refresh Useful</button>
+  <button class="refresh-waste" onclick="refreshWaste()">Refresh Unuseful</button>
+</div>
+</div>
+
+<audio id="usefulSound">
+  <source src="audio.mp3" type="audio/ogg">
+</audio>
+
+<script>
+let bins = {
+  1:{useful:0,waste:0},
+  2:{useful:0,waste:0},
+  3:{useful:0,waste:0}
+};
+
+let active = 1;
+
+function selectBin(id){
+  active = id;
+  updateRight();
+  highlightSelected();
+}
+
+function highlightSelected(){
+  for(let i=1;i<=3;i++){
+    let card = document.getElementById("bucketCard"+i);
+    if(i===active){
+      card.classList.add("selected");
+    } else {
+      card.classList.remove("selected");
+    }
+  }
+}
+
+function addUseful(id){
+  if(bins[id].useful < 100){
+    bins[id].useful += 10;
+    let sound = document.getElementById("usefulSound");
+    sound.currentTime = 0; 
+    sound.play();
+  }
+  updateBin(id);
+}
+
+function addWaste(id){
+  if(bins[id].waste < 100){
+    bins[id].waste += 10;
+  }
+  updateBin(id);
+}
+
+function refreshUseful(){
+  bins[active].useful = 0;
+  updateBin(active);
+  let sound = document.getElementById("usefulSound");
+  sound.pause();
+  sound.currentTime = 0;
+}
+
+function refreshWaste(){
+  bins[active].waste = 0;
+  updateBin(active);
+}
+
+function updateBin(id){
+  document.getElementById("u"+id).style.height = bins[id].useful + "%";
+  document.getElementById("w"+id).style.height = bins[id].waste + "%";
+  if(active === id){
+    updateRight();
+  }
+}
+
+function updateStatus(){
+  let b = bins[active];
+  let btn = document.getElementById("statusBtn");
+
+  if(b.useful >= 100 || b.waste >= 100){
+    btn.innerText = "Status: FULL";
+    btn.style.background = "#c62828";
+  } else {
+    btn.innerText = "Status: NOT FULL";
+    btn.style.background = "#2e7d32";
+  }
+}
+
+function updateRight(){
+  let b = bins[active];
+  document.getElementById("activeTitle").innerText =
+    "Selected: Bucket " + active;
+
+  document.getElementById("ru").style.height = b.useful + "%";
+  document.getElementById("rw").style.height = b.waste + "%";
+
+  document.getElementById("levelText").innerText =
+    `Useful: ${b.useful}% | Unuseful: ${b.waste}%`;
+
+  updateStatus();
+}
+
+// Initialize
+updateRight();
+highlightSelected();
+</script>
+
+</body>
+</html>
